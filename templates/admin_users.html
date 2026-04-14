@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Usuarios - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Gestión de Usuarios</h2>
+            <p class="text-muted">Crear y administrar cuentas de usuario</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">Volver</a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Formulario para crear nuevo usuario -->
+    <div class="card mb-5 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Crear Nuevo Usuario</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">Nombre de Usuario *</label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               required minlength="3" placeholder="Mínimo 3 caracteres">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               required placeholder="usuario@ejemplo.com">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="password" class="form-label">Contraseña *</label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               required minlength="6" placeholder="Mínimo 6 caracteres">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="role" class="form-label">Rol *</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="vendedor" selected>Vendedor</option>
+                            <option value="gerente">Gerente</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Crear Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de usuarios -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Usuarios Registrados ({{ users|length }})</h5>
+        </div>
+        <div class="card-body">
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Creado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ user.username }}</strong>
+                                        {% if user.id == current_user.id %}
+                                            <span class="badge bg-info">Tú</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if user.role == 'admin' %}bg-danger
+                                            {% elif user.role == 'gerente' %}bg-warning text-dark
+                                            {% else %}bg-info{% endif %}">
+                                            {{ user.role|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else 'N/A' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <!-- Botón activar/desactivar -->
+                                        {% if user.id != current_user.id %}
+                                            <form method="POST" action="{{ url_for('toggle_user_status', user_id=user.id) }}" style="display:inline;">
+                                                {% if user.is_active %}
+                                                    <button type="submit" class="btn btn-sm btn-warning" 
+                                                            onclick="return confirm('¿Desactivar este usuario?')">
+                                                        Desactivar
+                                                    </button>
+                                                {% else %}
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        Activar
+                                                    </button>
+                                                {% endif %}
+                                            </form>
+                                        {% endif %}
+                                        
+                                        <!-- Botón eliminar -->
+                                        {% if user.id != current_user.id %}
+                                            <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-danger" 
+                                                        onclick="return confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')">
+                                                    Eliminar
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No hay usuarios registrados aún.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Información de seguridad -->
+    <div class="alert alert-info mt-4" role="alert">
+        <h6 class="alert-heading">ℹ️ Información de Seguridad</h6>
+        <ul class="mb-0 small">
+            <li><strong>Contraseñas:</strong> Las contraseñas se almacenan de forma segura (hash). Nunca se pueden recuperar.</li>
+            <li><strong>Roles:</strong> 
+                <ul>
+                    <li><strong>Admin:</strong> Acceso total - puede crear usuarios, eliminar productos, etc.</li>
+                    <li><strong>Gerente:</strong> Acceso a reportes y movimientos avanzados</li>
+                    <li><strong>Vendedor:</strong> Acceso básico - puede realizar movimientos y ventas</li>
+                </ul>
+            </li>
+            <li><strong>Estado:</strong> Los usuarios inactivos no pueden iniciar sesión.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

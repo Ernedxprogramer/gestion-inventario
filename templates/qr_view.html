@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Código QR - {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <h3>🏷️ Código QR para Venta Rápida</h3>
+    <div class="card shadow mb-4">
+      <div class="card-body">
+        <h5 class="card-title text-center">{{ product.name }}</h5>
+        
+        <div class="alert alert-success">
+          <strong>✅ Modo de uso:</strong>
+          <p>Escanea este código QR con tu teléfono para registrar una venta automáticamente</p>
+        </div>
+        
+        <!-- QR Code -->
+        <div class="text-center" style="padding: 30px; background: #f8f9fa; border-radius: 10px; margin: 20px 0;">
+          <div id="qr-code"></div>
+        </div>
+        
+        <!-- URL del QR -->
+        <div class="alert alert-info">
+          <strong>🔗 URL en el QR:</strong><br>
+          <code style="word-break: break-all; font-size: 11px;">{{ qr_url }}</code>
+        </div>
+        
+        <!-- Información del Producto -->
+        <div class="card">
+          <div class="card-header bg-light">
+            <strong>📦 Información del Producto</strong>
+          </div>
+          <div class="card-body">
+            <table class="table table-sm mb-0">
+              <tr>
+                <td><strong>Nombre:</strong></td>
+                <td>{{ product.name }}</td>
+              </tr>
+              <tr>
+                <td><strong>Categoría:</strong></td>
+                <td>{{ product.category }}</td>
+              </tr>
+              <tr>
+                <td><strong>SKU:</strong></td>
+                <td><code>{{ product.sku or 'N/A' }}</code></td>
+              </tr>
+              <tr>
+                <td><strong>Precio por unidad:</strong></td>
+                <td><strong>${{ '%.2f'|format(product.price) }}</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Stock actual:</strong></td>
+                <td>
+                  {% if product.stock < product.min_stock %}
+                    <span class="badge bg-danger">{{ product.stock }}</span>
+                  {% else %}
+                    <span class="badge bg-success">{{ product.stock }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Stock mínimo:</strong></td>
+                <td>{{ product.min_stock }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Instrucciones -->
+        <div class="card mt-3">
+          <div class="card-header bg-light">
+            <strong>📱 Cómo usar:</strong>
+          </div>
+          <div class="card-body">
+            <ol>
+              <li>Imprime o muestra este código QR en tu tienda</li>
+              <li>Los vendedores escanean con su teléfono</li>
+              <li>Se registra automáticamente <strong>1 venta</strong> del producto</li>
+              <li>Se actualiza el stock en tiempo real</li>
+              <li>Se muestra confirmación en la pantalla</li>
+            </ol>
+            <div class="alert alert-warning">
+              <strong>⚠️ Nota:</strong> El QR registra una venta de <strong>1 unidad</strong> cada vez que se escanea
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-grid gap-2 mt-4">
+          <a href="{{ url_for('download_qr', product_id=product.id) }}" class="btn btn-success btn-lg">
+            ⬇️ Descargar QR (PNG de alta calidad)
+          </a>
+          <a href="{{ url_for('quick_sale', product_id=product.id, quantity=1) }}" class="btn btn-info btn-lg" target="_blank">
+            🔗 Abrir URL de venta rápida (prueba)
+          </a>
+          <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-secondary">
+            Volver a Editar Producto
+          </a>
+          <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">
+            Volver a Productos
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Librería QR Code para generar en el navegador -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+<script>
+  // Generar QR con la URL de venta rápida
+  QRCode.toCanvas(document.getElementById('qr-code'), '{{ qr_data }}', {
+    width: 400,
+    margin: 10,
+    color: {
+      dark: "#000000",
+      light: "#FFFFFF"
+    }
+  }, function (error) {
+    if (error) {
+      console.error('Error generando QR:', error);
+      document.getElementById('qr-code').innerHTML = '<p class="text-danger">Error generando QR code</p>';
+    }
+  });
+</script>
+{% endblock %}
