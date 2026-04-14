@@ -33,9 +33,22 @@ def get_local_ip():
 
 def create_app():
     app = Flask(__name__, template_folder=TEMPLATE_DIR)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'inventory.db')
+    
+    # Configuración de base de datos: PostgreSQL en producción, SQLite en desarrollo
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        # Para Render/Heroku: reemplazar postgres:// con postgresql://
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    else:
+        # Desarrollo local con SQLite
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'inventory.db')
+    
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = 'a7a240f199409281abd23ae2a3ee6c7cc25d0384b7641d009046aeeaec5e3c6d'
+    
+    # SECRET_KEY desde variables de entorno (más seguro)
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a7a240f199409281abd23ae2a3ee6c7cc25d0384b7641d009046aeeaec5e3c6d')
     
     db.init_app(app)
     
