@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Venta - {{ product.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container-login {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px 15px 0 0;
+            padding: 25px;
+            text-align: center;
+            color: white;
+        }
+        .product-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .product-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+        .product-price {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 12px 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .quantity-display {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .icon {
+            font-size: 40px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-login">
+        <div class="card">
+            <div class="card-header">
+                <div class="icon">🛍️</div>
+                <h4 class="mb-0">Registrar Venta</h4>
+            </div>
+            <div class="card-body p-4">
+                <!-- Información del Producto -->
+                <div class="product-info">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">${{ '%.2f'|format(product.price) }}</div>
+                    <div class="quantity-display">Cantidad: {{ quantity }}</div>
+                </div>
+
+                <!-- Mensajes de Error -->
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>❌ Error:</strong> {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <!-- Formulario de Login -->
+                <form method="POST" action="{{ url_for('mobile_quick_sale_process') }}">
+                    <div class="form-group">
+                        <label class="form-label">👤 Usuario</label>
+                        <input type="text" class="form-control" name="username" placeholder="Tu usuario" required autofocus>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">🔐 Contraseña</label>
+                        <input type="password" class="form-control" name="password" placeholder="Tu contraseña" required>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    <input type="hidden" name="product_id" value="{{ product_id }}">
+                    <input type="hidden" name="quantity" value="{{ quantity }}">
+
+                    <!-- Info Total -->
+                    <div class="alert alert-info" style="border-radius: 10px;">
+                        <strong>💰 Total a cobrar:</strong><br>
+                        <span style="font-size: 24px; font-weight: bold; color: #667eea;">
+                            ${{ '%.2f'|format(product.price * quantity) }}
+                        </span>
+                    </div>
+
+                    <!-- Botón Login -->
+                    <button type="submit" class="btn-login">
+                        ✔️ Registrar Venta
+                    </button>
+                </form>
+
+                <!-- Info adicional -->
+                <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
+                    <p>Ingresa tus credenciales para confirmar la venta</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

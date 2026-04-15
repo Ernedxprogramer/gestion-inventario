@@ -11,67 +11,213 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, {% if success %}#28a745{% else %}#dc3545{% endif %} 0%, {% if success %}#20c997{% else %}#e74c3c{% endif %} 100%);
-            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, {% if success %}#667eea{% else %}#dc3545{% endif %} 0%, {% if success %}#764ba2{% else %}#e74c3c{% endif %} 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
         }
         .card {
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            max-width: 400px;
-            width: 90%;
+            border: none;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            max-width: 450px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, {% if success %}#667eea{% else %}#dc3545{% endif %} 0%, {% if success %}#764ba2{% else %}#c82333{% endif %} 100%);
+            border: none;
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
         }
         .icon {
-            font-size: 80px;
-            margin: 20px 0;
+            font-size: 60px;
+            margin-bottom: 15px;
+            display: block;
         }
-        h2 {
+        .card-header h2 {
             font-weight: bold;
-            color: {% if success %}#28a745{% else %}#dc3545{% endif %};
+            font-size: 28px;
+            margin: 0;
+            color: white;
+        }
+        .card-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .card-body {
+            padding: 30px;
         }
         .product-info {
             background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid {% if success %}#667eea{% else %}#dc3545{% endif %};
+        }
+        .product-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .product-info-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .product-info-label {
+            color: #666;
+            font-weight: 500;
+        }
+        .product-info-value {
+            color: #333;
+            font-weight: 600;
+        }
+        .total-box {
+            background: linear-gradient(135deg, {% if success %}#667eea1a{% else %}#dc35451a{% endif %} 0%, {% if success %}#764ba21a{% else %}#e74c3c1a{% endif %} 100%);
+            border: 2px solid {% if success %}#667eea{% else %}#dc3545{% endif %};
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .total-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .total-amount {
+            font-size: 36px;
+            font-weight: bold;
+            color: {% if success %}#667eea{% else %}#dc3545{% endif %};
+        }
+        .vendor-info {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
         }
         .countdown {
-            font-size: 24px;
+            text-align: center;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #999;
+        }
+        .countdown-timer {
+            font-size: 20px;
             font-weight: bold;
-            color: #666;
-            margin-top: 20px;
+            color: {% if success %}#667eea{% else %}#dc3545{% endif %};
+        }
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-action-primary {
+            background: linear-gradient(135deg, {% if success %}#667eea{% else %}#dc3545{% endif %} 0%, {% if success %}#764ba2{% else %}#c82333{% endif %} 100%);
+            color: white;
+        }
+        .btn-action-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .error-details {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="card text-center">
+    <div class="card">
+        {% if success %}
+        <div class="card-header">
+            <span class="icon">✅</span>
+            <h2>¡Venta Registrada!</h2>
+            <p>Transacción completada exitosamente</p>
+        </div>
+        {% else %}
+        <div class="card-header">
+            <span class="icon">❌</span>
+            <h2>Error en la Venta</h2>
+            <p>No se pudo procesar la transacción</p>
+        </div>
+        {% endif %}
+
         <div class="card-body">
             {% if success %}
-                <div class="icon">✅</div>
-                <h2>¡Venta Registrada!</h2>
-                <p class="text-muted">{{ message }}</p>
-                
-                {% if product %}
+                <!-- Información del Producto -->
                 <div class="product-info">
-                    <strong>{{ product.name }}</strong><br>
-                    Cantidad: {{ quantity }}<br>
-                    <span class="badge bg-success">Precio: ${{ '%.2f'|format(product.price) }}</span><br>
-                    <h4 class="text-success mt-2">Total: ${{ '%.2f'|format(total) }}</h4>
+                    <div class="product-info-row">
+                        <span class="product-info-label">📦 Producto:</span>
+                        <span class="product-info-value">{{ product.name }}</span>
+                    </div>
+                    <div class="product-info-row">
+                        <span class="product-info-label">📊 Cantidad:</span>
+                        <span class="product-info-value">{{ quantity }} unid.</span>
+                    </div>
+                    <div class="product-info-row">
+                        <span class="product-info-label">💵 Precio Unit:</span>
+                        <span class="product-info-value">${{ '%.2f'|format(product.price) }}</span>
+                    </div>
+                    <div class="product-info-row">
+                        <span class="product-info-label">📦 Stock Actual:</span>
+                        <span class="product-info-value">{{ product.stock }} unid.</span>
+                    </div>
                 </div>
-                
-                <div class="alert alert-info mt-3">
-                    <strong>Stock actualizado:</strong><br>
-                    Stock nuevo: {{ product.stock }}
+
+                <!-- Total -->
+                <div class="total-box">
+                    <div class="total-label">TOTAL A COBRAR</div>
+                    <div class="total-amount">${{ '%.2f'|format(total) }}</div>
+                </div>
+
+                <!-- Vendedor -->
+                {% if vendor %}
+                <div class="vendor-info">
+                    👤 Registrado por: <strong>{{ vendor }}</strong>
                 </div>
                 {% endif %}
+
+                <!-- Mensaje -->
+                <div class="alert alert-success alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+
             {% else %}
-                <div class="icon">❌</div>
-                <h2>Error en la Venta</h2>
-                <p class="text-danger">{{ message }}</p>
+                <!-- Error Message -->
+                <div class="error-details">
+                    <strong>⚠️ Detalles del error:</strong><br>
+                    <p style="margin-top: 10px; margin-bottom: 0;">{{ message }}</p>
+                </div>
             {% endif %}
-            
+
+            <!-- Countdown -->
             <div class="countdown">
-                Redirigiendo en <span id="timer">5</span>s...
+                ⏱️ Redirigiendo en <span class="countdown-timer" id="timer">5</span>s...
             </div>
+
+            <!-- Botones de Acción -->
+            <button class="btn-action btn-action-primary" onclick="window.location.href='/report'">
+                📊 Ver Reportes
+            </button>
+            <button class="btn-action btn-action-primary" onclick="window.location.href='/products'" style="margin-top: 10px;">
+                🏠 Volver al Inicio
+            </button>
         </div>
     </div>
 
@@ -85,7 +231,7 @@
             
             if (countdown <= 0) {
                 clearInterval(interval);
-                // Redirigir a reportes o página principal
+                // Redirigir a reportes
                 window.location.href = '/report';
             }
         }, 1000);

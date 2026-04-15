@@ -332,11 +332,19 @@ def create_app():
         )
 
     @app.route('/quick-sale/<int:product_id>/<int:quantity>')
-    @login_required
     def quick_sale(product_id, quantity=1):
-        """Registrar venta rápida por escaneo QR (solo usuarios autenticados)"""
+        """Registrar venta rápida por escaneo QR - con autenticación integrada"""
         try:
             product = Product.query.get_or_404(product_id)
+            
+            # Si no está autenticado, mostrar formulario de login integrado
+            if not current_user.is_authenticated:
+                return render_template(
+                    'quick_sale_login.html',
+                    product_id=product_id,
+                    quantity=quantity,
+                    product=product
+                )
             
             # Validar stock
             if product.stock < quantity:
@@ -383,15 +391,101 @@ def create_app():
                 message=f'Error: {str(e)}'
             )
 
+    @app.route('/mobile/quick-sale-process', methods=['POST'])
+    def mobile_quick_sale_process():
+        """Procesar login + venta rápida desde móvil (escaneo QR)"""
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
+            product_id = request.form.get('product_id')
+            quantity = int(request.form.get('quantity', 1))
+            
+            # Validar credenciales
+            user = User.query.filter_by(username=username).first()
+            if not user or not user.check_password(password):
+                return render_template(
+                    'quick_sale_login.html',
+                    error='Usuario o contraseña inválidos',
+                    product_id=product_id,
+                    quantity=quantity,
+                    product=Product.query.get(product_id)
+                )
+            
+            if not user.is_active:
+                return render_template(
+                    'quick_sale_login.html',
+                    error='Tu cuenta ha sido desactivada',
+                    product_id=product_id,
+                    quantity=quantity,
+                    product=Product.query.get(product_id)
+                )
+            
+            # Procesar venta con el usuario autenticado
+            product = Product.query.get_or_404(product_id)
+            
+            # Validar stock
+            if product.stock < quantity:
+                return render_template(
+                    'quick_sale_result.html',
+                    success=False,
+                    message=f'Stock insuficiente. Disponibles: {product.stock}, Solicitados: {quantity}',
+                    product=product
+                )
+            
+            # Registrar movimiento
+            movement = Movement(
+                product_id=product.id,
+                user_id=user.id,
+                type='sale',
+                quantity=quantity,
+                price=product.price,
+                note=f'Venta registrada por {user.username} (QR Móvil)',
+                timestamp=datetime.utcnow()
+            )
+            
+            # Actualizar stock
+            product.stock -= quantity
+            
+            db.session.add(movement)
+            db.session.commit()
+            
+            total = quantity * product.price
+            
+            return render_template(
+                'quick_sale_result.html',
+                success=True,
+                product=product,
+                quantity=quantity,
+                total=total,
+                vendor=user.username,
+                message=f'¡Venta registrada! {quantity}x {product.name} = ${total:.2f}'
+            )
+        
+        except Exception as e:
+            return render_template(
+                'quick_sale_result.html',
+                success=False,
+                message=f'Error: {str(e)}'
+            )
+
     @app.route('/product/<int:product_id>/qr')
     @login_required
     def generate_qr(product_id):
         """Mostrar código QR en HTML"""
         p = Product.query.get_or_404(product_id)
         
-        # Obtener IP local para que el QR funcione desde el teléfono
-        local_ip = get_local_ip()
-        qr_url = f"http://{local_ip}:5000" + url_for('quick_sale', product_id=p.id, quantity=1)
+        # Determinar el host correcto para el QR
+        host = request.host
+        
+        # Si accede desde localhost, usar IP local en su lugar
+        if 'localhost' in host or '127.0.0.1' in host:
+            local_ip = get_local_ip()
+            # Reemplazar el puerto si está presente
+            port = request.host.split(':')[1] if ':' in request.host else '5000'
+            host = f"{local_ip}:{port}"
+        
+        protocol = 'https' if request.is_secure or host.endswith('.ngrok.io') else 'http'
+        qr_url = f"{protocol}://{host}" + url_for('quick_sale', product_id=p.id, quantity=1)
         
         return render_template('qr_view.html', product=p, qr_data=qr_url, qr_url=qr_url)
     
@@ -401,9 +495,18 @@ def create_app():
         """Descargar código QR como imagen PNG"""
         p = Product.query.get_or_404(product_id)
         
-        # Obtener IP local para que el QR funcione desde el teléfono
-        local_ip = get_local_ip()
-        qr_url = f"http://{local_ip}:5000" + url_for('quick_sale', product_id=p.id, quantity=1)
+        # Determinar el host correcto para el QR
+        host = request.host
+        
+        # Si accede desde localhost, usar IP local en su lugar
+        if 'localhost' in host or '127.0.0.1' in host:
+            local_ip = get_local_ip()
+            # Reemplazar el puerto si está presente
+            port = request.host.split(':')[1] if ':' in request.host else '5000'
+            host = f"{local_ip}:{port}"
+        
+        protocol = 'https' if request.is_secure or host.endswith('.ngrok.io') else 'http'
+        qr_url = f"{protocol}://{host}" + url_for('quick_sale', product_id=p.id, quantity=1)
         
         # Generar QR
         qr = qrcode.QRCode(
@@ -439,8 +542,7 @@ if __name__ == '__main__':
         local_ip = get_local_ip()
         print(f"\n✅ Servidor iniciado correctamente")
         print(f"📍 Acceso local: http://localhost:{port}")
-        print(f"📱 Acceso desde red: http://{local_ip}:{port}")
-        print(f"📲 Escanea el QR con tu teléfono para registrar ventas\n")
+        print(f"🌐 Acceso desde otras máquinas: http://{local_ip}:{port}\n")
     
     app.run(host='0.0.0.0', port=port, debug=debug_mode, use_reloader=False)
 
