@@ -2,9 +2,10 @@ Flask
 Flask-SQLAlchemy
 Flask-Login
 Flask-WTF
-waitress
+gunicorn
 qrcode
 Pillow
 openpyxl
 reportlab
 matplotlib
+psycopg2-binary
